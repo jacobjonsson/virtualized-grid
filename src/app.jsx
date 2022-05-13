@@ -49,6 +49,10 @@ export function App() {
       >
         {({ columnIndex, rowIndex, style }) => {
           const item = items[rowIndex * columnCount + columnIndex];
+          if (!item) {
+            return null;
+          }
+
           return (
             <Card
               style={{
