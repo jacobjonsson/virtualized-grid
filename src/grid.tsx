@@ -3,10 +3,14 @@ import { useRef } from "react";
 import { CSSProperties } from "react";
 import styled from "styled-components";
 
-function getColumnCountAndWidth(containerWidth: number, minWidth: number) {
+function getColumnCountAndWidth(
+  containerWidth: number,
+  minWidth: number,
+  gutter: number
+) {
   const columnCount = Math.floor(containerWidth / minWidth);
   const whiteSpace = containerWidth - columnCount * minWidth;
-  const spaceToAdd = (whiteSpace - 16) / columnCount;
+  const spaceToAdd = (whiteSpace - gutter) / columnCount;
   return { columnCount, columnWidth: minWidth + spaceToAdd };
 }
 
@@ -31,8 +35,10 @@ export function Grid({
   const containerRef = useRef<HTMLDivElement>(null);
   const { columnCount, columnWidth } = getColumnCountAndWidth(
     containerWidth,
-    minWidth
+    minWidth,
+    gutter
   );
+
   const { y } = useWindowScroll();
 
   const columnHeight = columnWidth * 0.75;
@@ -43,7 +49,6 @@ export function Grid({
   const endingColumnIndex = Math.ceil(endPosition / columnHeight) + 1;
 
   const startingIndex = Math.max(0, startingColumnIndex * columnCount);
-
   const endingIndex = Math.min(numberOfItems, endingColumnIndex * columnCount);
 
   const cells: JSX.Element[] = [];
@@ -52,8 +57,8 @@ export function Grid({
     const columnIndex = Math.floor(index % columnCount);
 
     const style =
-      styleCache[index] ||
-      (styleCache[index] = {
+      styleCache[`${index}-${columnHeight}-${columnWidth}`] ||
+      (styleCache[`${index}-${columnHeight}-${columnWidth}`] = {
         position: "absolute",
         top: rowIndex * columnHeight,
         left: columnIndex * columnWidth,
@@ -63,8 +68,6 @@ export function Grid({
 
     cells.push(children(style, index));
   }
-
-  console.log(cells.length);
 
   return (
     <Container
