@@ -14,7 +14,7 @@ function createItem() {
   };
 }
 
-const items = Array(10000).fill(null).map(createItem);
+const items = Array(1000000).fill(null).map(createItem);
 
 const GUTTER_SIZE = 16;
 const MIN_WIDTH = 224;
