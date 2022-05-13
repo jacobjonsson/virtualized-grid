@@ -14,7 +14,7 @@ function createItem() {
   };
 }
 
-const items = Array(1000000).fill(null).map(createItem);
+const items = Array(1000).fill(null).map(createItem);
 
 const GUTTER_SIZE = 16;
 const MIN_WIDTH = 224;
@@ -26,11 +26,11 @@ export function App() {
   function getColumnCount(width) {
     const columnCount = Math.floor(width / (GUTTER_SIZE + MIN_WIDTH));
     const whiteSpace = width - columnCount * (GUTTER_SIZE + MIN_WIDTH);
-    const spaceToAdd = whiteSpace / columnCount;
+    const spaceToAdd = (whiteSpace - 16) / columnCount;
     return { columnCount, columnWidth: MIN_WIDTH + spaceToAdd };
   }
 
-  const width = rect?.width - 16 || 0;
+  const width = rect?.width || 0;
   const height = rect?.height || 0;
   const { columnCount, columnWidth } = getColumnCount(width);
   const rowCount = Math.ceil(items.length / columnCount);
