@@ -10,6 +10,8 @@ function getColumnCountAndWidth(containerWidth: number, minWidth: number) {
   return { columnCount, columnWidth: minWidth + spaceToAdd };
 }
 
+const styleCache: Record<number, CSSProperties> = {};
+
 interface GridProps {
   containerWidth: number;
   containerHeight: number;
@@ -34,43 +36,40 @@ export function Grid({
   const { y } = useWindowScroll();
 
   const columnHeight = columnWidth * 0.75;
-  const startPosition = y - window.outerHeight;
-  const endPosition = y + window.outerHeight * 2;
+  const startPosition = y;
+  const endPosition = y + window.innerHeight;
 
-  const startingColumnIndex = startPosition / columnHeight;
-  const endingColumnIndex = endPosition / columnHeight;
-  const startingIndex = Math.max(
-    0,
-    Math.round(startingColumnIndex * columnCount)
-  );
-  const endingIndex = Math.min(
-    numberOfItems,
-    Math.round(endingColumnIndex * columnCount)
-  );
+  const startingColumnIndex = Math.floor(startPosition / columnHeight) - 1;
+  const endingColumnIndex = Math.ceil(endPosition / columnHeight) + 1;
+
+  const startingIndex = Math.max(0, startingColumnIndex * columnCount);
+
+  const endingIndex = Math.min(numberOfItems, endingColumnIndex * columnCount);
 
   const cells: JSX.Element[] = [];
   for (let index = startingIndex; index < endingIndex; index++) {
     const rowIndex = Math.floor(index / columnCount);
     const columnIndex = Math.floor(index % columnCount);
 
-    cells.push(
-      children(
-        {
-          position: "absolute",
-          top: rowIndex * columnHeight,
-          left: columnIndex * columnWidth,
-          width: columnWidth - gutter,
-          height: columnHeight - gutter,
-        },
-        index
-      )
-    );
+    const style =
+      styleCache[index] ||
+      (styleCache[index] = {
+        position: "absolute",
+        top: rowIndex * columnHeight,
+        left: columnIndex * columnWidth,
+        width: columnWidth - gutter,
+        height: columnHeight - gutter,
+      });
+
+    cells.push(children(style, index));
   }
+
+  console.log(cells.length);
 
   return (
     <Container
       ref={containerRef}
-      style={{ height: numberOfItems * columnHeight }}
+      style={{ height: (numberOfItems / columnCount) * columnHeight }}
     >
       {cells}
     </Container>

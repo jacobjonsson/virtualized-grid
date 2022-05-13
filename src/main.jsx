@@ -9,6 +9,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<CustomApp />} />
         <Route path="/custom" element={<CustomApp />} />
         <Route path="/react-window" element={<App />} />
       </Routes>
