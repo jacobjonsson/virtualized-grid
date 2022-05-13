@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker";
 import { useRect } from "@reach/rect";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import styled from "styled-components";
 import { Card } from "./card";
 import { Grid } from "./grid";
@@ -14,28 +14,34 @@ function createItem() {
   };
 }
 
-const items = Array(1000000).fill(null).map(createItem);
+const itemCache: Record<string, ReturnType<typeof createItem>> = {};
 
 export function CustomApp() {
+  const [numberOfItems, setNumberOfItems] = useState(10000);
   const containerRef = useRef<HTMLDivElement>(null);
   const containerRect = useRect(containerRef, { observe: true });
 
   return (
-    <div ref={containerRef}>
-      <Header>My virtualized grid</Header>
-      <SubHeader>Scroll to see the magic</SubHeader>
+    <div ref={containerRef} style={{ padding: "16px" }}>
+      <Header>A virtualized grid</Header>
+      <InputContainer>
+        <label>Number of items to render:</label>
+        <input
+          type="number"
+          value={numberOfItems}
+          onChange={(evt) => setNumberOfItems(parseInt(evt.target.value))}
+        />
+      </InputContainer>
 
       <Grid
         gutter={16}
         minWidth={224}
         containerWidth={containerRect?.width || 0}
         containerHeight={containerRect?.height || 0}
-        numberOfItems={items.length}
+        numberOfItems={numberOfItems}
       >
         {(style, index) => {
-          const item = items[index];
-          if (!item) return null;
-
+          const item = itemCache[index] || (itemCache[index] = createItem());
           return <Card style={style} {...item} />;
         }}
       </Grid>
@@ -45,8 +51,11 @@ export function CustomApp() {
 
 const Header = styled.h1`
   font-size: 32px;
+  margin-bottom: 12px;
 `;
 
-const SubHeader = styled.p`
-  font-size: 24px;
+const InputContainer = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
 `;

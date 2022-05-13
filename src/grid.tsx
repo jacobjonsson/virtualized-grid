@@ -57,8 +57,8 @@ export function Grid({
       children(
         {
           position: "absolute",
-          top: rowIndex * columnHeight + gutter,
-          left: columnIndex * columnWidth + gutter,
+          top: rowIndex * columnHeight,
+          left: columnIndex * columnWidth,
           width: columnWidth - gutter,
           height: columnHeight - gutter,
         },
