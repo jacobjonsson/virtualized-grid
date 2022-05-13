@@ -1,7 +1,15 @@
 import styled from "styled-components";
 import * as ContextMenu from "@radix-ui/react-context-menu";
+import { CSSProperties } from "react";
 
-export function Card({ style, image, title, subTitle }) {
+interface CardProps {
+  style: CSSProperties;
+  image: string;
+  title: string;
+  subTitle: string;
+}
+
+export function Card({ style, image, title, subTitle }: CardProps) {
   return (
     <ContextMenu.Root>
       <ContextMenu.Trigger asChild>
@@ -25,8 +33,6 @@ export function Card({ style, image, title, subTitle }) {
 }
 
 const Container = styled.div`
-  height: ${(props) => props.$height}px;
-  width: ${(props) => props.$width}px;
   display: flex;
   flex-direction: column;
   background-color: #3f3f46;

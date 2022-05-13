@@ -4,6 +4,7 @@ import { useRect } from "@reach/rect";
 import { Card } from "./card";
 import { forwardRef } from "react";
 import { useRef } from "react";
+import styled from "styled-components";
 
 function createItem() {
   return {
@@ -37,39 +38,47 @@ export function App() {
   const rowHeight = columnWidth * 0.75;
 
   return (
-    <div style={{ height: "100%", width: "100%" }} ref={containerRef}>
-      <FixedSizeGrid
-        width={width}
-        height={height}
-        columnCount={columnCount}
-        columnWidth={columnWidth + GUTTER_SIZE}
-        rowCount={rowCount}
-        rowHeight={rowHeight + GUTTER_SIZE}
-        innerElementType={InnerElementType}
-      >
-        {({ columnIndex, rowIndex, style }) => {
-          const item = items[rowIndex * columnCount + columnIndex];
-          if (!item) {
-            return null;
-          }
+    <>
+      <Header>Welcome!</Header>
 
-          return (
-            <Card
-              style={{
-                ...style,
-                left: style.left + GUTTER_SIZE,
-                top: style.top + GUTTER_SIZE,
-                width: style.width - GUTTER_SIZE,
-                height: style.height - GUTTER_SIZE,
-              }}
-              {...item}
-            />
-          );
-        }}
-      </FixedSizeGrid>
-    </div>
+      <div style={{ height: "100%", width: "100%" }} ref={containerRef}>
+        <FixedSizeGrid
+          width={width}
+          height={height}
+          columnCount={columnCount}
+          columnWidth={columnWidth + GUTTER_SIZE}
+          rowCount={rowCount}
+          rowHeight={rowHeight + GUTTER_SIZE}
+          innerElementType={InnerElementType}
+        >
+          {({ columnIndex, rowIndex, style }) => {
+            const item = items[rowIndex * columnCount + columnIndex];
+            if (!item) {
+              return null;
+            }
+
+            return (
+              <Card
+                style={{
+                  ...style,
+                  left: style.left + GUTTER_SIZE,
+                  top: style.top + GUTTER_SIZE,
+                  width: style.width - GUTTER_SIZE,
+                  height: style.height - GUTTER_SIZE,
+                }}
+                {...item}
+              />
+            );
+          }}
+        </FixedSizeGrid>
+      </div>
+    </>
   );
 }
+
+const Header = styled.h1`
+  font-size: 32px;
+`;
 
 const InnerElementType = forwardRef(({ style, ...rest }, ref) => {
   return (
