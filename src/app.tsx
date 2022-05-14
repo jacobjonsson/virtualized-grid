@@ -5,6 +5,8 @@ import styled from "styled-components";
 import { Card } from "./card";
 import { Grid } from "./grid";
 
+type Item = ReturnType<typeof createItem>;
+
 function createItem() {
   return {
     id: crypto.randomUUID(),
@@ -14,22 +16,32 @@ function createItem() {
   };
 }
 
-const itemCache: Record<string, ReturnType<typeof createItem>> = {};
+const itemsCache: Record<number, Item> = {};
 
-export function CustomApp() {
-  const [numberOfItems, setNumberOfItems] = useState(10000);
+function getItem(index: number) {
+  if (itemsCache[index]) {
+    return itemsCache[index];
+  }
+
+  const item = createItem();
+  itemsCache[index] = item;
+  return item;
+}
+
+export function App() {
   const containerRef = useRef<HTMLDivElement>(null);
   const containerRect = useRect(containerRef, { observe: true });
+  const [numberOfItems, setNumberOfItems] = useState(10_000);
 
   return (
-    <div ref={containerRef} style={{ padding: "16px" }}>
+    <div ref={containerRef} style={{ padding: "16px", overflow: "scroll" }}>
       <Header>A virtualized grid</Header>
       <InputContainer>
         <label>Number of items to render:</label>
         <input
           type="number"
           value={numberOfItems}
-          onChange={(evt) => setNumberOfItems(parseInt(evt.target.value))}
+          onChange={(evt) => setNumberOfItems(parseInt(evt.target.value, 10))}
         />
       </InputContainer>
 
@@ -37,12 +49,14 @@ export function CustomApp() {
         gutter={16}
         minWidth={224}
         containerWidth={containerRect?.width || 0}
-        containerHeight={containerRect?.height || 0}
+        containerHeight={window.innerHeight}
         numberOfItems={numberOfItems}
       >
         {(style, index) => {
-          const item = itemCache[index] || (itemCache[index] = createItem());
-          return <Card style={style} {...item} />;
+          const item = getItem(index);
+          return (
+            <Card key={index} data-index={index} style={style} {...item} />
+          );
         }}
       </Grid>
     </div>

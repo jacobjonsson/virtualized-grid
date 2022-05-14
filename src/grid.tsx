@@ -1,20 +1,106 @@
 import { useWindowScroll } from "react-use";
-import { useRef } from "react";
 import { CSSProperties } from "react";
 import styled from "styled-components";
 
-function getColumnCountAndWidth(
-  containerWidth: number,
-  minWidth: number,
-  gutter: number
-) {
-  const columnCount = Math.floor(containerWidth / minWidth);
-  const whiteSpace = containerWidth - columnCount * minWidth;
-  const spaceToAdd = (whiteSpace - gutter) / columnCount;
-  return { columnCount, columnWidth: minWidth + spaceToAdd };
+function getColumnCount({
+  containerWidth,
+  minWidth,
+  gutter,
+}: {
+  minWidth: number;
+  gutter: number;
+  containerWidth: number;
+}) {
+  return Math.floor(containerWidth / (minWidth + gutter));
 }
 
-const styleCache: Record<number, CSSProperties> = {};
+function getCellSize({
+  columnCount,
+  minWidth,
+  gutter,
+  containerWidth,
+}: {
+  columnCount: number;
+  minWidth: number;
+  gutter: number;
+  containerWidth: number;
+}) {
+  const whiteSpace = containerWidth - columnCount * minWidth;
+  const spaceToAdd = (whiteSpace - gutter) / columnCount;
+  const cellWidth = minWidth + spaceToAdd;
+  const cellHeight = cellWidth * 0.75;
+  return { cellWidth, cellHeight };
+}
+
+const styleCache: Record<string, CSSProperties> = {};
+
+function getCellStyles({
+  rowIndex,
+  columnIndex,
+  cellHeight,
+  cellWidth,
+  gutter,
+}: {
+  rowIndex: number;
+  columnIndex: number;
+  cellHeight: number;
+  cellWidth: number;
+  gutter: number;
+}): CSSProperties {
+  const cacheKey = `${rowIndex}-${columnIndex}-${cellHeight}-${cellWidth}`;
+  if (styleCache[cacheKey]) {
+    return styleCache[cacheKey];
+  }
+
+  const style: CSSProperties = {
+    position: "absolute",
+    top: rowIndex * cellHeight,
+    left: columnIndex * cellWidth,
+    height: cellHeight - gutter,
+    width: cellWidth - gutter,
+  };
+
+  styleCache[cacheKey] = style;
+  return style;
+}
+
+function getRowStartIndexForOffset({
+  rowHeight,
+  rowCount,
+  scrollTop,
+}: {
+  rowHeight: number;
+  rowCount: number;
+  scrollTop: number;
+}) {
+  return Math.max(0, Math.min(rowCount - 1, Math.floor(scrollTop / rowHeight)));
+}
+
+function getRowStopIndexForStartIndex({
+  rowHeight,
+  rowCount,
+  scrollTop,
+  startIndex,
+  containerHeight,
+}: {
+  rowHeight: number;
+  rowCount: number;
+  containerHeight: number;
+  startIndex: number;
+  scrollTop: number;
+}) {
+  const top = startIndex * rowHeight;
+  const numVisibleRows = Math.ceil(
+    (containerHeight + scrollTop - top) / rowHeight
+  );
+  return Math.max(
+    0,
+    Math.min(
+      rowCount - 1,
+      startIndex + numVisibleRows - 1 // -1 is because stop index is inclusive
+    )
+  );
+}
 
 interface GridProps {
   containerWidth: number;
@@ -27,53 +113,66 @@ interface GridProps {
 
 export function Grid({
   containerWidth,
+  containerHeight,
   minWidth,
   children,
   numberOfItems,
   gutter,
 }: GridProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { columnCount, columnWidth } = getColumnCountAndWidth(
-    containerWidth,
+  const columnCount = getColumnCount({ containerWidth, minWidth, gutter });
+  const { cellHeight, cellWidth } = getCellSize({
+    columnCount,
     minWidth,
-    gutter
+    gutter,
+    containerWidth,
+  });
+
+  const { y: scrollTop } = useWindowScroll();
+
+  const startingRowIndex = getRowStartIndexForOffset({
+    rowHeight: cellHeight,
+    rowCount: numberOfItems / columnCount,
+    scrollTop,
+  });
+  const endingRowIndex = getRowStopIndexForStartIndex({
+    rowHeight: cellHeight,
+    rowCount: numberOfItems / columnCount,
+    containerHeight: containerHeight,
+    startIndex: startingRowIndex,
+    scrollTop,
+  });
+
+  const startingIndex = Math.max(
+    0,
+    startingRowIndex * columnCount - columnCount * 2
+  );
+  const endingIndex = Math.min(
+    numberOfItems,
+    endingRowIndex * columnCount + columnCount * 2
   );
 
-  const { y } = useWindowScroll();
-
-  const columnHeight = columnWidth * 0.75;
-  const startPosition = y;
-  const endPosition = y + window.innerHeight;
-
-  const startingColumnIndex = Math.floor(startPosition / columnHeight) - 1;
-  const endingColumnIndex = Math.ceil(endPosition / columnHeight) + 1;
-
-  const startingIndex = Math.max(0, startingColumnIndex * columnCount);
-  const endingIndex = Math.min(numberOfItems, endingColumnIndex * columnCount);
+  if (containerWidth === 0 || containerHeight === 0) {
+    return null;
+  }
 
   const cells: JSX.Element[] = [];
   for (let index = startingIndex; index < endingIndex; index++) {
     const rowIndex = Math.floor(index / columnCount);
     const columnIndex = Math.floor(index % columnCount);
 
-    const style =
-      styleCache[`${index}-${columnHeight}-${columnWidth}`] ||
-      (styleCache[`${index}-${columnHeight}-${columnWidth}`] = {
-        position: "absolute",
-        top: rowIndex * columnHeight,
-        left: columnIndex * columnWidth,
-        width: columnWidth - gutter,
-        height: columnHeight - gutter,
-      });
+    const style = getCellStyles({
+      rowIndex,
+      columnIndex,
+      cellHeight,
+      cellWidth,
+      gutter,
+    });
 
     cells.push(children(style, index));
   }
 
   return (
-    <Container
-      ref={containerRef}
-      style={{ height: (numberOfItems / columnCount) * columnHeight }}
-    >
+    <Container style={{ height: (numberOfItems / columnCount) * cellHeight }}>
       {cells}
     </Container>
   );

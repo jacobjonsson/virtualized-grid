@@ -9,11 +9,11 @@ interface CardProps {
   subTitle: string;
 }
 
-export function Card({ style, image, title, subTitle }: CardProps) {
+export function Card({ style, image, title, subTitle, ...rest }: CardProps) {
   return (
     <ContextMenu.Root>
       <ContextMenu.Trigger asChild>
-        <Container style={style}>
+        <Container style={style} {...rest}>
           <ImageContainer>
             <Image src={image} />
           </ImageContainer>
